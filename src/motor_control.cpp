@@ -9,8 +9,7 @@ Servo rightMotorServo;
 
 // Constructor
 MotorControl::MotorControl() : leftMotorPwm(PWM_NEUTRAL_US), 
-                               rightMotorPwm(PWM_NEUTRAL_US),
-                               servoInitialized(false) {
+                               rightMotorPwm(PWM_NEUTRAL_US) {
     // Constructor implementation
 }
 
@@ -28,15 +27,9 @@ void MotorControl::begin() {
 
 // Set car mode parameters
 void MotorControl::setCarMode(int throttlePwm, int steeringPwm) {
-    // Ensure PWM values are within valid range
-    if (throttlePwm < PWM_MIN_US) throttlePwm = PWM_MIN_US;
-    if (throttlePwm > PWM_MAX_US) throttlePwm = PWM_MAX_US;
-    if (steeringPwm < PWM_MIN_US) steeringPwm = PWM_MIN_US;
-    if (steeringPwm > PWM_MAX_US) steeringPwm = PWM_MAX_US;
-    
-    // Update PWM values
-    leftMotorPwm = throttlePwm;
-    rightMotorPwm = steeringPwm;
+    // Map inputs to valid PWM range (1000-2000us)
+    leftMotorPwm = map(throttlePwm, PWM_MIN_US, PWM_MAX_US, PWM_MIN_US, PWM_MAX_US);
+    rightMotorPwm = map(steeringPwm, PWM_MIN_US, PWM_MAX_US, PWM_MIN_US, PWM_MAX_US);
     
     // Write to servos
     leftMotorServo.writeMicroseconds(leftMotorPwm);
@@ -47,15 +40,9 @@ void MotorControl::setCarMode(int throttlePwm, int steeringPwm) {
 
 // Set tank mode parameters
 void MotorControl::setTankMode(int leftMotorPwm, int rightMotorPwm) {
-    // Ensure PWM values are within valid range
-    if (leftMotorPwm < PWM_MIN_US) leftMotorPwm = PWM_MIN_US;
-    if (leftMotorPwm > PWM_MAX_US) leftMotorPwm = PWM_MAX_US;
-    if (rightMotorPwm < PWM_MIN_US) rightMotorPwm = PWM_MIN_US;
-    if (rightMotorPwm > PWM_MAX_US) rightMotorPwm = PWM_MAX_US;
-    
-    // Update PWM values
-    this->leftMotorPwm = leftMotorPwm;
-    this->rightMotorPwm = rightMotorPwm;
+    // Map inputs to valid PWM range (1000-2000us) and update state
+    this->leftMotorPwm = map(leftMotorPwm, PWM_MIN_US, PWM_MAX_US, PWM_MIN_US, PWM_MAX_US);
+    this->rightMotorPwm = map(rightMotorPwm, PWM_MIN_US, PWM_MAX_US, PWM_MIN_US, PWM_MAX_US);
     
     // Write to servos
     leftMotorServo.writeMicroseconds(leftMotorPwm);

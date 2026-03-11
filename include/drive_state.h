@@ -44,7 +44,17 @@ public:
     void update(InputHandler* inputHandler);
 
     /**
-     * @brief Switch between driving modes
+     * @brief Request a mode switch (sets flag for FSM to handle)
+     * 
+     * This is the event-driven approach - sets a flag that will be processed
+     * in the next update() cycle, maintaining separation of concerns.
+     */
+    void requestModeSwitch();
+
+    /**
+     * @brief Switch between driving modes (internal use by FSM)
+     * 
+     * Called internally when modeSwitchRequested flag is set.
      */
     void switchMode();
 
@@ -56,7 +66,7 @@ public:
     DriveMode getMode() const;
 
     /**
-     * @brief Get neutral state for failsafe
+     * @brief Set neutral state for failsafe
      */
     void setNeutral();
 
@@ -69,7 +79,7 @@ private:
     // Current driving mode
     DriveMode currentMode;
 
-    // Mode switching flag
+    // Mode switching flag (event-driven approach)
     bool modeSwitchRequested;
 };
 

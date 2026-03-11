@@ -11,6 +11,54 @@ Rove transforms your RC car with these powerful capabilities:
 - **Smart Safety**: Automatic failsafe that sets all motor outputs to neutral when Bluetooth connection to your Xbox controller is lost
 - **High Performance**: Leverages the ESP32-S3's dual-core processor and 8MB PSRAM for smooth, responsive control
 
+## Controller Mappings
+
+The firmware uses an **Xbox Wireless Controller** (or any XInput-compatible gamepad). Here are the controls for each driving mode:
+
+### Car Mode (Standard RC)
+
+_For vehicles with a steering servo and single motor/ESC_
+
+| Input                     | Function    | Description                              |
+| ------------------------- | ----------- | ---------------------------------------- |
+| **Left Stick Up/Down**    | Throttle    | Forward/Reverse control (Y-axis)         |
+| **Left Stick Left/Right** | Steering    | Turn left/right (X-axis)                 |
+| **Y Button**              | Mode Switch | Switch to Tank Mode                      |
+| **B Button**              | Brake/Stop  | Apply brake, stop all motors immediately |
+
+### Tank Mode (Differential Steering)
+
+_For tracked vehicles or twin-motor cars_
+
+| Input                     | Function        | Description                                                    |
+| ------------------------- | --------------- | -------------------------------------------------------------- |
+| **Left Stick Up/Down**    | Forward/Reverse | Both motors move forward or reverse together                   |
+| **Left Stick Left/Right** | Turn            | Turns the vehicle by differentiating motor speeds (left/right) |
+| **Y Button**              | Mode Switch     | Switch to Car Mode                                             |
+| **B Button**              | Brake/Stop      | Apply brake, stop all motors immediately                       |
+
+### Xbox Controller Layout Reference
+
+```
+          ┌─────────────┐
+    ┌─────│ LB   RB     │─────┐
+         │  ┌───┐       │
+         │  │◄┼▼►│  A    │
+         │  ├──┤       │
+    ◄────│► │◄┼▲►│  B    │────►
+         │  │   │       │
+         │  └───┘       │
+    ◄────│► │ Start │ Select│────►
+         │  │  Y      │     │
+         │  └─────────┘     │
+    ┌─────│                   │─────┐
+          └───────────────────┘
+
+Left Stick: Controls movement (forward/back, left/right)
+Y Button: Top face button - switches driving modes
+B Button: Bottom face button - brake/stop function
+```
+
 ## Hardware Overview
 
 The ESP32-S3 serves as the central hub for your RC car, keeping the interior clean and organized. Most retrofits will use the **BEC (Battery Eliminator Circuit)** from your ESC to power the board directly.

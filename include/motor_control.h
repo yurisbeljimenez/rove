@@ -58,9 +58,6 @@ private:
     // PWM output values
     int leftMotorPwm;
     int rightMotorPwm;
-    
-    // Flag to track if servo library is initialized
-    bool servoInitialized;
 };
 
 #endif // MOTOR_CONTROL_H
