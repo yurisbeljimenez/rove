@@ -56,32 +56,6 @@ void InputHandler::handleGamepadUpdate() {
 }
 
 /**
- * @brief Apply deadzone to analog stick value
- * 
- * Removes small input values near center that may be caused by drift.
- * 
- * @param value Raw axis value (-32768 to 32767)
- * @return int32_t Deadzone-adjusted value
- */
-int32_t applyDeadzone(int32_t value) {
-    float normalized = (float)value / 32767.0f;
-    
-    if (fabs(normalized) < AXIS_DEADZONE_THRESHOLD) {
-        return 0;
-    }
-    
-    // Scale back to full range, preserving sign
-    float adjusted = normalized;
-    if (adjusted >= 0.0f) {
-        adjusted = (adjusted - AXIS_DEADZONE_THRESHOLD) / (1.0f - AXIS_DEADZONE_THRESHOLD);
-    } else {
-        adjusted = (adjusted + AXIS_DEADZONE_THRESHOLD) / (1.0f - AXIS_DEADZONE_THRESHOLD);
-    }
-    
-    return static_cast<int32_t>(adjusted * 32767.0f);
-}
-
-/**
  * @brief Callback for when controller data arrives from Bluepad32
  * 
  * This function is registered as a friend of InputHandler to access private members.
