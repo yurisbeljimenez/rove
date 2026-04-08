@@ -5,6 +5,32 @@
 #include "logger.h"
 #include <Arduino.h>
 
+/**
+ * @brief Apply deadzone to analog stick value
+ * 
+ * Removes small input values near center that may be caused by drift.
+ * 
+ * @param value Raw axis value (-32768 to 32767)
+ * @return int32_t Deadzone-adjusted value
+ */
+static int32_t applyDeadzone(int32_t value) {
+    float normalized = (float)value / 32767.0f;
+    
+    if (fabs(normalized) < AXIS_DEADZONE_THRESHOLD) {
+        return 0;
+    }
+    
+    // Scale back to full range, preserving sign
+    float adjusted = normalized;
+    if (adjusted >= 0.0f) {
+        adjusted = (adjusted - AXIS_DEADZONE_THRESHOLD) / (1.0f - AXIS_DEADZONE_THRESHOLD);
+    } else {
+        adjusted = (adjusted + AXIS_DEADZONE_THRESHOLD) / (1.0f - AXIS_DEADZONE_THRESHOLD);
+    }
+    
+    return static_cast<int32_t>(adjusted * 32767.0f);
+}
+
 DriveState::DriveState() : currentMode(MODE_INIT), modeSwitchRequested(false) {}
 
 void DriveState::begin() {
@@ -49,6 +75,10 @@ void DriveState::update(InputHandler* inputHandler) {
                 int32_t throttle = pad->axisY();
                 int32_t steering = pad->axisX();
 
+                // Apply deadzone to remove drift near center position
+                throttle = applyDeadzone(throttle);
+                steering = applyDeadzone(steering);
+
                 // Convert to PWM values (map handles range clamping)
                 int throttlePwm = map(throttle, -32768, 32767, PWM_MIN_US, PWM_MAX_US);
                 int steeringPwm = map(steering, -32768, 32767, PWM_MIN_US, PWM_MAX_US);
@@ -63,6 +93,10 @@ void DriveState::update(InputHandler* inputHandler) {
             {
                 int32_t leftMotor = pad->axisY();
                 int32_t rightMotor = pad->axisY();
+
+                // Apply deadzone to remove drift near center position
+                leftMotor = applyDeadzone(leftMotor);
+                rightMotor = applyDeadzone(rightMotor);
 
                 // Convert to PWM values (map handles range clamping)
                 int leftPwm = map(leftMotor, -32768, 32767, PWM_MIN_US, PWM_MAX_US);

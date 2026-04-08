@@ -10,6 +10,9 @@
 #define PWM_MIN_US          1000
 #define PWM_MAX_US          2000
 
+// Deadzone threshold for analog sticks (0.1 = 10% deadzone)
+#define AXIS_DEADZONE_THRESHOLD 0.1f
+
 typedef enum {
     LOG_DEBUG,
     LOG_INFO,
