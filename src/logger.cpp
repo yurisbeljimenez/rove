@@ -1,5 +1,8 @@
 #include "logger.h"
 
+// Static instance pointer initialization
+Logger* Logger::instance = nullptr;
+
 // Constructor
 Logger::Logger() : currentLogLevel(LOG_INFO) {
     // Constructor implementation

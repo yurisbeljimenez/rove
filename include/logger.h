@@ -38,14 +38,18 @@ public:
     /**
      * @brief Get singleton instance
      * 
-     * @return Logger* Pointer to singleton instance
+     * @return Logger* Pointer to singleton instance (thread-safe)
      */
     static Logger* getInstance() {
-        static Logger instance;
-        return &instance;
+        if (instance == nullptr) {
+            instance = new Logger();
+        }
+        return instance;
     }
 
 private:
+    // Singleton instance pointer
+    static Logger* instance;
     // Current log level threshold
     LogLevel currentLogLevel;
 };

@@ -2,18 +2,17 @@
 #define INPUT_HANDLER_H
 
 #include <Arduino.h>
-#include <Bluepad32.h>
 #include "config.h"
 #include "logger.h"
+#include <Bluepad32.h>  // Include for Controller type definition
 
-// Forward declaration
+// Forward declaration - only needed if we don't include Bluepad32.h above
 class DriveState;
 
 /**
  * @brief Input Handler class for managing Xbox controller input
  * 
- * This class handles Xbox controller BLE pairing and raw stick data processing
- * following the Observer Pattern design.
+ * This class handles Xbox controller connection and raw stick data processing.
  */
 class InputHandler {
 public:
@@ -28,11 +27,11 @@ public:
     void begin();
 
     /**
-     * @brief Get current gamepad data
+     * @brief Get current controller data
      * 
-     * @return const Gamepad* Pointer to current gamepad data
+     * @return const Controller* Pointer to current controller data (from Bluepad32)
      */
-    const Gamepad* getGamepad() const;
+    const Controller* getGamepad() const;
 
     /**
      * @brief Set reference to drive state for mode switching
@@ -42,31 +41,34 @@ public:
     void setDriveState(DriveState* state);
 
     /**
-     * @brief Get singleton instance
+     * @brief Get singleton instance for use in callbacks
      * 
-     * @return InputHandler* Pointer to singleton instance
+     * @return InputHandler* Pointer to singleton instance, nullptr if not initialized
      */
-    static InputHandler* getInstance() {
-        return instance;
-    }
+    static InputHandler* getInstance();
+
+    /**
+     * @brief Handle gamepad update (polling-based)
+     * 
+     * Call this from the main loop to process controller input.
+     */
+    void handleGamepadUpdate();
 
 private:
-    // Static callback functions for Bluepad32
-    static void onControllerConnected(const Gamepad* pad);
-    static void onControllerDisconnected(const Gamepad* pad);
-    static void onGamepadUpdated(const Gamepad* pad);
-
-    // Instance methods for handling updates
-    void handleGamepadUpdate(const Gamepad* pad);
-
     // Static instance for singleton pattern
     static InputHandler* instance;
 
-    // Current gamepad data
-    Gamepad currentGamepad;
+    // Current controller data - using Controller type from Bluepad32.h
+    Controller currentController;
 
     // Reference to drive state for mode switching
     DriveState* driveState = nullptr;
+    
+    // Friend declaration for callback function access
+    friend void onControllerData(uni_hid_device_t*, uni_controller_t*);
 };
+
+// Forward declaration of the static callback
+void onControllerData(uni_hid_device_t* d, uni_controller_t* ctl);
 
 #endif // INPUT_HANDLER_H
