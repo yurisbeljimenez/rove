@@ -6,12 +6,12 @@
 #include <Arduino.h>
 
 /**
- * @brief Apply deadzone to analog stick value
+ * @brief Apply deadzone to analog stick value.
  * 
  * Removes small input values near center that may be caused by drift.
  * 
- * @param value Raw axis value (-32768 to 32767)
- * @return int32_t Deadzone-adjusted value
+ * @param value Raw axis value (-32768 to 32767).
+ * @return int32_t Deadzone-adjusted value.
  */
 static int32_t applyDeadzone(int32_t value) {
     float normalized = (float)value / 32767.0f;
@@ -31,22 +31,39 @@ static int32_t applyDeadzone(int32_t value) {
     return static_cast<int32_t>(adjusted * 32767.0f);
 }
 
-DriveState::DriveState() : currentMode(MODE_INIT), modeSwitchRequested(false) {}
+/**
+ * @brief Constructs a new DriveState object.
+ */
+DriveState::DriveState() : currentMode(DriveState::DriveMode::INIT), modeSwitchRequested(false) {}
 
+/**
+ * @brief Initializes the drive state machine and sets the default mode.
+ */
 void DriveState::begin() {
-    currentMode = MODE_CAR; // Default to car mode
-    Logger::getInstance()->log(LOG_INFO, "DRIVE", "Drive state machine initialized");
+    currentMode = DriveState::DriveMode::CAR; // Default to car mode
+    Logger::getInstance()->log(LogLevel::INFO, "DRIVE", "Drive state machine initialized");
 }
 
+/**
+ * @brief Signals that a driving mode switch has been requested.
+ */
 void DriveState::requestModeSwitch() {
-    if (currentMode != MODE_FAILSAFE) {
+    if (currentMode != DriveState::DriveMode::FAILSAFE) {
         modeSwitchRequested = true;
-        Logger::getInstance()->log(LOG_DEBUG, "DRIVE", "Mode switch requested");
+        Logger::getInstance()->log(LogLevel::DEBUG, "DRIVE", "Mode switch requested");
     } else {
-        Logger::getInstance()->log(LOG_WARN, "DRIVE", "Cannot switch modes while in failsafe");
+        Logger::getInstance()->log(LogLevel::WARN, "DRIVE", "Cannot switch modes while in failsafe");
     }
 }
 
+/**
+ * @brief Performs one iteration of the FSM update logic.
+ * 
+ * Processes mode transitions, reads gamepad input via the provided handler,
+ * calculates motor outputs based on current mode, and handles failsafe conditions.
+ * 
+ * @param inputHandler Pointer to the active InputHandler for reading controller data.
+ */
 void DriveState::update(InputHandler* inputHandler) {
     // Handle mode switching if requested (FSM pattern)
     if (modeSwitchRequested) {
@@ -59,9 +76,9 @@ void DriveState::update(InputHandler* inputHandler) {
 
     // Handle failsafe condition - controller may not be connected yet
     if (pad == nullptr) {
-        if (currentMode != MODE_FAILSAFE) {
-            currentMode = MODE_FAILSAFE;
-            Logger::getInstance()->log(LOG_WARN, "DRIVE", "Controller disconnected - entering failsafe");
+        if (currentMode != DriveState::DriveMode::FAILSAFE) {
+            currentMode = DriveState::DriveMode::FAILSAFE;
+            Logger::getInstance()->log(LogLevel::WARN, "DRIVE", "Controller disconnected - entering failsafe");
         }
         setNeutral();
         return;
@@ -69,7 +86,7 @@ void DriveState::update(InputHandler* inputHandler) {
 
     // Process input based on current mode
     switch (currentMode) {
-        case MODE_CAR:
+        case DriveState::DriveMode::CAR:
             // Car mode: Y-axis = throttle, X-axis = steering
             {
                 int32_t throttle = pad->axisY();
@@ -88,7 +105,7 @@ void DriveState::update(InputHandler* inputHandler) {
             }
             break;
 
-        case MODE_TANK:
+        case DriveState::DriveMode::TANK:
             // Tank mode: Y-axis = forward/rev, X-axis = turn (differential)
             {
                 int32_t leftMotor = pad->axisY();
@@ -107,45 +124,59 @@ void DriveState::update(InputHandler* inputHandler) {
             }
             break;
 
-        case MODE_FAILSAFE:
+        case DriveState::DriveMode::FAILSAFE:
             // Failsafe: set all outputs to neutral
             setNeutral();
             break;
 
         default:
             // Unknown mode - enter failsafe
-            currentMode = MODE_FAILSAFE;
+            currentMode = DriveState::DriveMode::FAILSAFE;
             setNeutral();
             break;
     }
 }
 
+/**
+ * @brief Executes the transition between driving modes.
+ */
 void DriveState::switchMode() {
     switch (currentMode) {
-        case MODE_CAR:
-            currentMode = MODE_TANK;
-            Logger::getInstance()->log(LOG_INFO, "DRIVE", "Switched to TANK_MODE");
+        case DriveState::DriveMode::CAR:
+            currentMode = DriveState::DriveMode::TANK;
+            Logger::getInstance()->log(LogLevel::INFO, "DRIVE", "Switched to TANK_MODE");
             break;
-        case MODE_TANK:
-            currentMode = MODE_CAR;
-            Logger::getInstance()->log(LOG_INFO, "DRIVE", "Switched to CAR_MODE");
+        case DriveState::DriveMode::TANK:
+            currentMode = DriveState::DriveMode::CAR;
+            Logger::getInstance()->log(LogLevel::INFO, "DRIVE", "Switched to CAR_MODE");
             break;
         default:
-            currentMode = MODE_CAR;
-            Logger::getInstance()->log(LOG_INFO, "DRIVE", "Switched to CAR_MODE (default)");
+            currentMode = DriveState::DriveMode::CAR;
+            Logger::getInstance()->log(LogLevel::INFO, "DRIVE", "Switched to CAR_MODE (default)");
             break;
     }
 }
 
+/**
+ * @brief Retrieves the current active driving mode.
+ * 
+ * @return DriveMode The current state of the machine.
+ */
 DriveState::DriveMode DriveState::getMode() const {
     return currentMode;
 }
 
+/**
+ * @brief Immediately sets all motor outputs to their neutral PWM positions.
+ */
 void DriveState::setNeutral() {
     MotorControl::getInstance()->setNeutral();
 }
 
+/**
+ * @brief Triggers an immediate braking/stopping action.
+ */
 void DriveState::applyBreak() {
-    Logger::getInstance()->log(LOG_INFO, "DRIVE", "Brake activated");
+    Logger::getInstance()->log(LogLevel::INFO, "DRIVE", "Brake activated");
     setNeutral();
 }

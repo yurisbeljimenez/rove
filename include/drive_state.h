@@ -9,77 +9,96 @@
 class InputHandler;
 
 /**
- * @brief Drive State class implementing Finite State Machine logic
+ * @file drive_state.h
+ * @brief Manages the vehicle's driving behavior and mode transitions.
+ */
+
+/**
+ * @class DriveState
+ * @brief Implements a Finite State Machine (FSM) to handle different driving modes.
  * 
- * This class manages the state machine for different driving modes (Car Mode, Tank Mode)
- * and performs the arcade or tank mixing math.
+ * The DriveState class is responsible for interpreting gamepad input and translating it into 
+ * appropriate motor commands based on the active mode (Car Mode or Tank Mode). It also 
+ * manages transitions between these modes and ensures the vehicle enters a safe state 
+ * (FAILSAFE) if control is lost.
  */
 class DriveState {
 public:
     /**
-     * @brief Driving modes
+     * @brief Enumeration of possible driving states/modes for the FSM.
      */
-    typedef enum {
-        MODE_INIT,
-        MODE_CAR,
-        MODE_TANK,
-        MODE_FAILSAFE
-    } DriveMode;
+    enum class DriveMode {
+        /** Initial state before system is ready */
+        INIT,
+        /** Standard car steering (servo + single motor) */
+        CAR,
+        /** Differential steering (twin motors/tank treads) */
+        TANK,
+        /** Emergency safe state with all outputs neutralized */
+        FAILSAFE
+    };
 
     /**
-     * @brief Construct a new DriveState object
+     * @brief Constructs a new DriveState object.
      */
     DriveState();
 
     /**
-     * @brief Initialize the drive state machine
+     * @brief Initializes the drive state machine and sets the default mode.
      */
     void begin();
 
     /**
-     * @brief Update the drive state based on input
+     * @brief Performs one iteration of the FSM update logic.
      * 
-     * @param inputHandler Reference to input handler for gamepad data
+     * Processes mode transitions, reads gamepad input via the provided handler,
+     * calculates motor outputs based on current mode, and handles failsafe conditions.
+     * 
+     * @param inputHandler Pointer to the active InputHandler for reading controller data.
      */
     void update(InputHandler* inputHandler);
 
     /**
-     * @brief Request a mode switch (sets flag for FSM to handle)
+     * @brief Signals that a driving mode switch has been requested.
      * 
-     * This is the event-driven approach - sets a flag that will be processed
-     * in the next update() cycle, maintaining separation of concerns.
+     * This uses an event-driven approach by setting an internal flag, which is
+     * processed during the next `update()` cycle to ensure state consistency.
      */
     void requestModeSwitch();
 
     /**
-     * @brief Switch between driving modes (internal use by FSM)
+     * @brief Executes the transition between driving modes.
      * 
-     * Called internally when modeSwitchRequested flag is set.
+     * Internal FSM method used when a mode switch has been requested.
      */
     void switchMode();
 
     /**
-     * @brief Get current driving mode
+     * @brief Retrieves the current active driving mode.
      * 
-     * @return DriveMode Current driving mode
+     * @return DriveMode The current state of the machine.
      */
     DriveMode getMode() const;
 
     /**
-     * @brief Set neutral state for failsafe
+     * @brief Immediately sets all motor outputs to their neutral PWM positions.
+     * 
+     * Used during failsafe activation or when a brake command is received.
      */
     void setNeutral();
 
     /**
-     * @brief Apply break/stop function
+     * @brief Triggers an immediate braking/stopping action.
+     * 
+     * Sets the vehicle to a neutral state and logs the event.
      */
     void applyBreak();
 
 private:
-    // Current driving mode
+    /** @brief The current mode of the Finite State Machine. */
     DriveMode currentMode;
 
-    // Mode switching flag (event-driven approach)
+    /** @brief Flag indicating that a mode transition is pending for the next update cycle. */
     bool modeSwitchRequested;
 };
 

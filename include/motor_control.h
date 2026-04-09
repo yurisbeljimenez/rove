@@ -6,48 +6,63 @@
 #include "logger.h"
 
 /**
- * @brief Motor Control class implementing Hardware Abstraction Layer
+ * @file motor_control.h
+ * @brief Provides a Hardware Abstraction Layer (HAL) for motor and servo control.
+ */
+
+/**
+ * @class MotorControl
+ * @brief Implements the Hardware Abstraction Layer for motor and steering control.
  * 
- * This class translates mathematical calculations into PWM signals for specific pins,
- * following the HAL (Hardware Abstraction Layer) design pattern.
+ * This class translates high-level driving commands (Car Mode or Tank Mode) into 
+ * low-level PWM signals sent to the ESCs and servos via specific GPIO pins.
+ * It follows the Singleton design pattern to ensure unified hardware access.
  */
 class MotorControl {
 public:
     /**
-     * @brief Construct a new MotorControl object
+     * @brief Constructs a new MotorControl object.
      */
     MotorControl();
 
     /**
-     * @brief Initialize the motor control system
+     * @brief Initializes the motor control system and attaches PWM pins.
+     * 
+     * Should be called once during system setup to prepare the ESCs/Servos.
      */
     void begin();
 
     /**
-     * @brief Set car mode parameters
+     * @brief Configures outputs for Standard Car Mode.
      * 
-     * @param throttlePwm PWM value for throttle (1000-2000us)
-     * @param steeringPwm PWM value for steering (1000-2000us)
+     * Maps throttle and steering commands to the respective PWM pins.
+     * 
+     * @param throttlePwm Target PWM value for the throttle ESC (typically 1000-2000us).
+     * @param steeringPwm Target PWM value for the steering servo (typically 1000-2000us).
      */
     void setCarMode(int throttlePwm, int steeringPwm);
 
     /**
-     * @brief Set tank mode parameters
+     * @brief Configures outputs for Tank/Differential Mode.
      * 
-     * @param leftMotorPwm PWM value for left motor (1000-2000us)
-     * @param rightMotorPwm PWM value for right motor (1000-2000us)
+     * Maps independent speed commands to the left and right motors.
+     * 
+     * @param leftMotorPwm Target PWM value for the left motor (1000-2000us).
+     * @param rightMotorPwm Target PWM value for the right motor (1000-2000us).
      */
     void setTankMode(int leftMotorPwm, int rightMotorPwm);
 
     /**
-     * @brief Set all outputs to neutral state
+     * @brief Immediately sets all motor/servo outputs to neutral.
+     * 
+     * Used for safety failsafe and braking procedures.
      */
     void setNeutral();
 
     /**
-     * @brief Get singleton instance
+     * @brief Retrieves the singleton instance of MotorControl.
      * 
-     * @return MotorControl* Pointer to singleton instance
+     * @return MotorControl* A pointer to the global MotorControl instance.
      */
     static MotorControl* getInstance() {
         static MotorControl instance;
@@ -55,8 +70,9 @@ public:
     }
 
 private:
-    // PWM output values
+    /** @brief Current PWM duty cycle for the left motor/servo output. */
     int leftMotorPwm;
+    /** @brief Current PWM duty cycle for the right motor/servo output. */
     int rightMotorPwm;
 };
 

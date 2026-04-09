@@ -199,6 +199,10 @@ For **Car Mode** setups with standard motors and steering servos, the **Flipsky 
 | System hangs              | Watchdog timeout    | Serial shows "System detected as halted"   |
 | No PSRAM detected         | Memory config wrong | Verify qio_opi setting in platformio.ini   |
 
+## Documentation
+
+The codebase is documented using **TSDoc/Doxygen** format. All header files (`.h`) contain detailed descriptions of classes, methods, and parameters to facilitate easy integration and understanding of the firmware's architecture.
+
 ## Support & Contributing
 
 For issues, feature requests, or contributions, please open an issue on the GitHub repository.

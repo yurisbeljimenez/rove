@@ -1,4 +1,5 @@
 #include "input_handler.h"
+#include "config.h"
 #include <Bluepad32.h>
 #include <Arduino.h>
 #include "drive_state.h"
@@ -7,7 +8,9 @@
 // Static instance for singleton pattern
 InputHandler* InputHandler::instance = nullptr;
 
-// Constructor
+/**
+ * @brief Constructs a new InputHandler object.
+ */
 InputHandler::InputHandler() {
     if (instance == nullptr) {
         instance = this;
@@ -15,50 +18,57 @@ InputHandler::InputHandler() {
 }
 
 /**
- * @brief Initialize the input handler and register Bluepad32 callbacks
+ * @brief Initializes the input handler and prepares internal buffers.
+ * 
+ * Should be called once during system setup.
  */
 void InputHandler::begin() {
     memset(&currentController, 0, sizeof(currentController));
     
-    Logger::getInstance()->log(LOG_INFO, "INPUT", "Input handler initialized");
+    Logger::getInstance()->log(LogLevel::INFO, "INPUT", "Input handler initialized");
 }
 
 /**
- * @brief Get current controller data
+ * @brief Retrieves the most recent gamepad data snapshot.
+ * 
+ * @return const Controller* A pointer to the current controller state. 
+ *         Returns nullptr if no controller is currently connected/available.
  */
 const Controller* InputHandler::getGamepad() const {
     return &currentController;
 }
 
 /**
- * @brief Set drive state reference (for mode switching)
+ * @brief Links the input handler to a DriveState instance.
+ * 
+ * This allows the InputHandler to trigger mode switches and braking actions
+ * directly on the state machine.
+ * 
+ * @param state Pointer to the active DriveState object.
  */
 void InputHandler::setDriveState(DriveState* state) {
     driveState = state;
 }
 
 /**
- * @brief Handle gamepad update in instance context
+ * @brief Processes gamepad input updates.
  * 
- * Uses Bluepad32's controller data structure to check button states.
- * Button checking uses bitwise operations on the buttons field:
- * - BUTTON_Y for mode switching (Xbox Y button)
- * - BUTTON_B for brake/stop (Xbox B button)
+ * Currently a placeholder for future polling-based logic, as the system 
+ * primarily uses event-driven callbacks from Bluepad32.
  */
 void InputHandler::handleGamepadUpdate() {
-    static uint32_t lastPollTime = 0;
-    const uint32_t POLL_INTERVAL_MS = 50;
-    
-    if (millis() - lastPollTime < POLL_INTERVAL_MS) {
-        return;
-    }
-    lastPollTime = millis();
+    // This method is currently a placeholder for future polling-based logic.
+    // The current implementation relies on Bluepad32 callbacks via onControllerData.
 }
 
 /**
- * @brief Callback for when controller data arrives from Bluepad32
+ * @brief Bluepad32 event callback triggered when controller data changes.
  * 
- * This function is registered as a friend of InputHandler to access private members.
+ * This is a low-level callback that processes raw HID reports and translates
+ * them into Rove-specific actions like mode switching or braking.
+ * 
+ * @param d Pointer to the HID device context.
+ * @param ctl Pointer to the controller data structure provided by Bluepad32.
  */
 void onControllerData(uni_hid_device_t* d, uni_controller_t* ctl) {
     (void)d;  // Unused parameter
@@ -71,14 +81,14 @@ void onControllerData(uni_hid_device_t* d, uni_controller_t* ctl) {
     
     // Process button presses from Xbox controller
     if (gp->buttons & BUTTON_Y) {
-        Logger::getInstance()->log(LOG_DEBUG, "INPUT", "Y button pressed - mode switch requested");
+        Logger::getInstance()->log(LogLevel::DEBUG, "INPUT", "Y button pressed - mode switch requested");
         if (handler->driveState != nullptr) {
             handler->driveState->requestModeSwitch();
         }
     }
     
     if (gp->buttons & BUTTON_B) {
-        Logger::getInstance()->log(LOG_DEBUG, "INPUT", "B button pressed - brake activated");
+        Logger::getInstance()->log(LogLevel::DEBUG, "INPUT", "B button pressed - brake activated");
         if (handler->driveState != nullptr) {
             handler->driveState->applyBreak();
         }
@@ -86,7 +96,7 @@ void onControllerData(uni_hid_device_t* d, uni_controller_t* ctl) {
 }
 
 /**
- * @brief Bluepad32 platform implementation for Rove system
+ * @brief Bluepad32 platform implementation for Rove system.
  */
 static void rove_platform_init(int argc, const char** argv) {
     ARG_UNUSED(argc);
@@ -99,12 +109,12 @@ static void rove_platform_on_init_complete(void) {
 
 static void rove_platform_on_device_connected(uni_hid_device_t* d) {
     (void)d;
-    Logger::getInstance()->log(LOG_INFO, "INPUT", "Bluetooth device connected");
+    Logger::getInstance()->log(LogLevel::INFO, "INPUT", "Bluetooth device connected");
 }
 
 static void rove_platform_on_device_disconnected(uni_hid_device_t* d) {
     (void)d;
-    Logger::getInstance()->log(LOG_WARN, "INPUT", "Bluetooth device disconnected");
+    Logger::getInstance()->log(LogLevel::WARN, "INPUT", "Bluetooth device disconnected");
 }
 
 static uni_error_t rove_platform_on_device_ready(uni_hid_device_t* d) {
@@ -117,7 +127,9 @@ static void rove_platform_on_controller_data(uni_hid_device_t* d, uni_controller
 }
 
 /**
- * @brief Get the Rove platform instance for Bluepad32 framework
+ * @brief Get the Rove platform instance for Bluepad32 framework.
+ * 
+ * @return struct uni_platform* Pointer to the static platform structure.
  */
 struct uni_platform* get_rove_platform(void) {
     static struct uni_platform plat = {

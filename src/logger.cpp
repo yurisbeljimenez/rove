@@ -3,17 +3,34 @@
 // Static instance pointer initialization
 Logger* Logger::instance = nullptr;
 
-// Constructor
-Logger::Logger() : currentLogLevel(LOG_INFO) {
+/**
+ * @brief Constructs a new Logger object.
+ * 
+ * Initializes the logger with a default INFO level.
+ */
+Logger::Logger() : currentLogLevel(LogLevel::INFO) {
     // Constructor implementation
 }
 
-// Set the minimum log level threshold
+/**
+ * @brief Sets the minimum log level threshold.
+ * 
+ * Any messages with a severity lower than this level will be ignored.
+ * 
+ * @param level The new minimum LogLevel threshold.
+ */
 void Logger::setLogLevel(LogLevel level) {
     currentLogLevel = level;
 }
 
-// Log a message with specified level and component ID
+/**
+ * @brief Logs a formatted message with a specific severity and component tag.
+ * 
+ * @param level The severity of the log (e.g., LogLevel::INFO, LogLevel::ERROR).
+ * @param component A string identifier for the module (e.g., "DRIVE", "MOTOR").
+ * @param format A printf-style format string.
+ * @param ... Variable arguments for the format string.
+ */
 void Logger::log(LogLevel level, const char* component, const char* format, ...) {
     // Check if this log level should be displayed
     if (level < currentLogLevel) {
@@ -27,16 +44,16 @@ void Logger::log(LogLevel level, const char* component, const char* format, ...)
     // Determine prefix based on log level
     const char* levelPrefix;
     switch (level) {
-        case LOG_DEBUG:
+        case LogLevel::DEBUG:
             levelPrefix = "[DEBUG]";
             break;
-        case LOG_INFO:
+        case LogLevel::INFO:
             levelPrefix = "[INFO]";
             break;
-        case LOG_WARN:
+        case LogLevel::WARN:
             levelPrefix = "[WARN]";
             break;
-        case LOG_ERROR:
+        case LogLevel::ERROR:
             levelPrefix = "[ERROR]";
             break;
         default:
